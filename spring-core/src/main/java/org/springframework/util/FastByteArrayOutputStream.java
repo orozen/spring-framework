@@ -397,31 +397,30 @@ public class FastByteArrayOutputStream extends OutputStream {
 				return 0;
 			}
 			else {
-				if (this.currentBuffer == null) {
+				int retVal;
+/*1*/			if (this.currentBuffer == null) {
 					// This stream doesn't have any data in it...
-					return -1;
-				}
-				else {
-					if (this.nextIndexInCurrentBuffer < this.currentBufferLength) {
-						int bytesToCopy = Math.min(len, this.currentBufferLength - this.nextIndexInCurrentBuffer);
-						System.arraycopy(this.currentBuffer, this.nextIndexInCurrentBuffer, b, off, bytesToCopy);
-						this.totalBytesRead += bytesToCopy;
-						this.nextIndexInCurrentBuffer += bytesToCopy;
-						int remaining = read(b, off + bytesToCopy, len - bytesToCopy);
-						return bytesToCopy + Math.max(remaining, 0);
-					}
-					else {
-						if (this.buffersIterator.hasNext()) {
-							this.currentBuffer = this.buffersIterator.next();
-							updateCurrentBufferLength();
-							this.nextIndexInCurrentBuffer = 0;
+/*2*/				retVal = -1;
+				} else {
+/*3*/				if (this.nextIndexInCurrentBuffer < this.currentBufferLength) {
+/*4*/					int bytesToCopy = Math.min(len, this.currentBufferLength - this.nextIndexInCurrentBuffer);
+/*5*/					System.arraycopy(this.currentBuffer, this.nextIndexInCurrentBuffer, b, off, bytesToCopy);
+/*6*/					this.totalBytesRead += bytesToCopy;
+/*7*/					this.nextIndexInCurrentBuffer += bytesToCopy;
+/*8*/					int remaining = read(b, off + bytesToCopy, len - bytesToCopy);
+/*9*/					retVal = bytesToCopy + Math.max(remaining, 0);
+					} else {
+/*10*/					if (this.buffersIterator.hasNext()) {
+/*11*/						this.currentBuffer = this.buffersIterator.next();
+/*12*/						updateCurrentBufferLength();
+/*13*/						this.nextIndexInCurrentBuffer = 0;
+						} else {
+/*14*/						this.currentBuffer = null;
 						}
-						else {
-							this.currentBuffer = null;
-						}
-						return read(b, off, len);
+/*15*/					retVal = read(b, off, len);
 					}
 				}
+				return retVal;
 			}
 		}
 
@@ -437,29 +436,28 @@ public class FastByteArrayOutputStream extends OutputStream {
 				throw new IllegalArgumentException("n must be 0 or greater: " + n);
 			}
 			int len = (int) n;
-			if (this.currentBuffer == null) {
+			long retVal;
+/*1*/		if (this.currentBuffer == null) {
 				// This stream doesn't have any data in it...
-				return 0;
-			}
-			else {
-				if (this.nextIndexInCurrentBuffer < this.currentBufferLength) {
-					int bytesToSkip = Math.min(len, this.currentBufferLength - this.nextIndexInCurrentBuffer);
-					this.totalBytesRead += bytesToSkip;
-					this.nextIndexInCurrentBuffer += bytesToSkip;
-					return (bytesToSkip + skip(len - bytesToSkip));
-				}
-				else {
-					if (this.buffersIterator.hasNext()) {
-						this.currentBuffer = this.buffersIterator.next();
-						updateCurrentBufferLength();
-						this.nextIndexInCurrentBuffer = 0;
+/*2*/			retVal = 0;
+			} else {
+/*3*/			if (this.nextIndexInCurrentBuffer < this.currentBufferLength) {
+/*4*/				int bytesToSkip = Math.min(len, this.currentBufferLength - this.nextIndexInCurrentBuffer);
+/*5*/				this.totalBytesRead += bytesToSkip;
+/*6*/				this.nextIndexInCurrentBuffer += bytesToSkip;
+/*7*/				retVal = (bytesToSkip + skip(len - bytesToSkip));
+				} else {
+/*8*/				if (this.buffersIterator.hasNext()) {
+/*9*/					this.currentBuffer = this.buffersIterator.next();
+/*10*/					updateCurrentBufferLength();
+/*11*/					this.nextIndexInCurrentBuffer = 0;
+					} else {
+/*12*/					this.currentBuffer = null;
 					}
-					else {
-						this.currentBuffer = null;
-					}
-					return skip(len);
+/*13*/				retVal = skip(len);
 				}
 			}
+			return retVal;
 		}
 
 		@Override
